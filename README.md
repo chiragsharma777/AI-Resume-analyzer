@@ -2,23 +2,10 @@
 
 AI-powered resume analysis and job matching.
 
-## Quick start (Windows)
 
-### 1. Backend
+### 1. Frontend
 
-```bat
-cd backend
-start.bat
-```
-
-API: http://127.0.0.1:8000  
-Docs: http://127.0.0.1:8000/docs
-
-Make sure `backend/.env` has a valid `OPENROUTER_API_KEY`.
-
-### 2. Frontend
-
-Open a second terminal:
+Open a terminal:
 
 ```bat
 cd resume-ai-frontend
