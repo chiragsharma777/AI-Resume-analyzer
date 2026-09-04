@@ -5,14 +5,12 @@ from app.config import DATABASE_URL
 
 
 # ==============================
-# SQLite Engine
+# MySQL Engine
 # ==============================
 
 engine = create_engine(
     DATABASE_URL,
-    connect_args={
-        "check_same_thread": False
-    }
+    pool_pre_ping=True,
 )
 
 
@@ -23,7 +21,7 @@ engine = create_engine(
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
-    bind=engine
+    bind=engine,
 )
 
 
