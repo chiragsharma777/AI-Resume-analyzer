@@ -20,22 +20,29 @@ function Login({ onBack, onRegister, onLoginSuccess }) {
     try {
       const formData = new URLSearchParams();
 
-      formData.append("username", email);
+      formData.append("username", email.trim());
       formData.append("password", password);
 
-      let response;
+      console.log("================================");
+      console.log("[LOGIN] API URL:", API_BASE_URL);
+      console.log("[LOGIN] Endpoint:", `${API_BASE_URL}/auth/login`);
+      console.log("[LOGIN] Email:", email.trim());
+      console.log("[LOGIN] Sending login request...");
+      console.log("================================");
 
-      try {
-        response = await fetch(`${API_BASE_URL}/auth/login`, {
+      const response = await fetch(
+        `${API_BASE_URL}/auth/login`,
+        {
           method: "POST",
           headers: {
+            Accept: "application/json",
             "Content-Type": "application/x-www-form-urlencoded",
           },
-          body: formData,
-        });
-      } catch (err) {
-        throw new Error(networkErrorMessage(err));
-      }
+          body: formData.toString(),
+        }
+      );
+
+      console.log("[LOGIN] Response status:", response.status);
 
       let data = null;
 
@@ -45,30 +52,79 @@ function Login({ onBack, onRegister, onLoginSuccess }) {
         data = null;
       }
 
+      console.log("[LOGIN] Response data:", data);
+
       if (!response.ok) {
         throw new Error(
-          formatApiError(data?.detail, "Invalid email or password")
+          formatApiError(
+            data?.detail,
+            `Login failed with status ${response.status}.`
+          )
         );
       }
 
-      localStorage.setItem("access_token", data.access_token);
-      localStorage.setItem("token_type", "Bearer");
+      if (!data?.access_token) {
+        throw new Error(
+          "Login succeeded, but the server did not return an access token."
+        );
+      }
+
+      // Save authentication information
+      localStorage.setItem(
+        "access_token",
+        data.access_token
+      );
+
+      localStorage.setItem(
+        "token_type",
+        data.token_type || "Bearer"
+      );
 
       if (data.user) {
-        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem(
+          "user",
+          JSON.stringify(data.user)
+        );
       } else {
         localStorage.setItem(
           "user",
           JSON.stringify({
-            email,
-            name: email.split("@")[0] || "User",
+            email: email.trim(),
+            name:
+              email.trim().split("@")[0] || "User",
           })
         );
       }
 
+      console.log("[LOGIN] Login successful.");
+
       onLoginSuccess();
     } catch (err) {
-      setError(err.message || "Unable to login. Please try again.");
+      console.error("[LOGIN] Login error:", err);
+
+      const message =
+        err?.message || "";
+
+      if (
+        message.includes(
+          "Cannot reach the API server"
+        ) ||
+        message.toLowerCase().includes(
+          "failed to fetch"
+        ) ||
+        message.toLowerCase().includes(
+          "networkerror"
+        )
+      ) {
+        setError(
+          "Cannot reach the API server. Please check your internet connection or try again."
+        );
+      } else {
+        setError(
+          message ||
+            networkErrorMessage(err)
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -77,22 +133,10 @@ function Login({ onBack, onRegister, onLoginSuccess }) {
   return (
     <div className="auth-page">
 
-      {/* =================================================
-          BACKGROUND
-          ================================================= */}
-
       <div className="auth-background">
-
         <div className="auth-orb auth-orb-one"></div>
-
         <div className="auth-orb auth-orb-two"></div>
-
       </div>
-
-
-      {/* =================================================
-          BACK TO HOME
-          ================================================= */}
 
       <button
         className="auth-back-button"
@@ -102,31 +146,16 @@ function Login({ onBack, onRegister, onLoginSuccess }) {
         ← Back to Home
       </button>
 
-
-      {/* =================================================
-          AUTH CONTAINER
-          ================================================= */}
-
       <div className="auth-container">
-
-
-        {/* =================================================
-            LEFT INFORMATION PANEL
-            ================================================= */}
 
         <div className="auth-info">
 
-
-          {/* BRAND */}
-
           <div className="auth-brand">
-
             <div className="auth-brand-icon">
               R
             </div>
 
             <div>
-
               <h2>
                 Resume<span>AI</span>
               </h2>
@@ -134,13 +163,8 @@ function Login({ onBack, onRegister, onLoginSuccess }) {
               <p>
                 AI Career Assistant
               </p>
-
             </div>
-
           </div>
-
-
-          {/* CONTENT */}
 
           <div className="auth-info-content">
 
@@ -149,79 +173,46 @@ function Login({ onBack, onRegister, onLoginSuccess }) {
               AI-POWERED
             </div>
 
-
             <h1>
               Welcome
               <br />
               <span>Back.</span>
             </h1>
 
-
             <p>
-              Continue your career journey with AI-powered
-              resume analysis, job matching, and career insights.
+              Continue your career journey with
+              AI-powered resume analysis, job
+              matching, and career insights.
             </p>
-
-
-            {/* BENEFITS */}
 
             <div className="auth-benefits">
 
-
               <div className="auth-benefit">
-
-                <div>
-                  ✓
-                </div>
-
+                <div>✓</div>
                 <span>
                   AI Resume Analysis
                 </span>
-
               </div>
 
-
               <div className="auth-benefit">
-
-                <div>
-                  ✓
-                </div>
-
+                <div>✓</div>
                 <span>
                   Smart Job Matching
                 </span>
-
               </div>
 
-
               <div className="auth-benefit">
-
-                <div>
-                  ✓
-                </div>
-
+                <div>✓</div>
                 <span>
                   Personalized Career Insights
                 </span>
-
               </div>
 
-
             </div>
-
           </div>
-
         </div>
 
-
-        {/* =================================================
-            LOGIN CARD
-            ================================================= */}
-
         <div className="auth-card">
-
-
-          {/* CARD HEADER */}
 
           <div className="auth-card-header">
 
@@ -229,45 +220,28 @@ function Login({ onBack, onRegister, onLoginSuccess }) {
               R
             </div>
 
-
             <h2>
               Sign in to ResumeAI
             </h2>
 
-
             <p>
-              Enter your details to access your dashboard.
+              Enter your details to access your
+              dashboard.
             </p>
 
           </div>
 
-
-          {/* ERROR */}
-
           {error && (
             <div className="auth-error">
-
-              <span>
-                !
-              </span>
-
+              <span>!</span>
               {error}
-
             </div>
           )}
-
-
-          {/* =================================================
-              LOGIN FORM
-              ================================================= */}
 
           <form
             className="auth-form"
             onSubmit={handleLogin}
           >
-
-
-            {/* EMAIL */}
 
             <div className="auth-field">
 
@@ -275,13 +249,11 @@ function Login({ onBack, onRegister, onLoginSuccess }) {
                 Email Address
               </label>
 
-
               <div className="auth-input-wrapper">
 
                 <span className="auth-input-icon">
                   @
                 </span>
-
 
                 <input
                   id="email"
@@ -299,18 +271,13 @@ function Login({ onBack, onRegister, onLoginSuccess }) {
 
             </div>
 
-
-            {/* PASSWORD */}
-
             <div className="auth-field">
-
 
               <div className="auth-label-row">
 
                 <label htmlFor="password">
                   Password
                 </label>
-
 
                 <button
                   type="button"
@@ -326,13 +293,11 @@ function Login({ onBack, onRegister, onLoginSuccess }) {
 
               </div>
 
-
               <div className="auth-input-wrapper">
 
                 <span className="auth-input-icon">
                   •••
                 </span>
-
 
                 <input
                   id="password"
@@ -350,9 +315,6 @@ function Login({ onBack, onRegister, onLoginSuccess }) {
 
             </div>
 
-
-            {/* LOGIN BUTTON */}
-
             <button
               type="submit"
               className="auth-submit-button"
@@ -362,16 +324,12 @@ function Login({ onBack, onRegister, onLoginSuccess }) {
               {loading ? (
                 <>
                   <span className="auth-spinner"></span>
-
                   Signing in...
                 </>
               ) : (
                 <>
                   Sign In
-
-                  <span>
-                    →
-                  </span>
+                  <span>→</span>
                 </>
               )}
 
@@ -379,30 +337,15 @@ function Login({ onBack, onRegister, onLoginSuccess }) {
 
           </form>
 
-
-          {/* =================================================
-              DIVIDER
-              ================================================= */}
-
           <div className="auth-divider">
-
-            <span>
-              OR
-            </span>
-
+            <span>OR</span>
           </div>
-
-
-          {/* =================================================
-              REGISTER LINK
-              ================================================= */}
 
           <div className="auth-register-text">
 
             <span>
               Don't have an account?
             </span>
-
 
             <button
               type="button"
@@ -413,18 +356,14 @@ function Login({ onBack, onRegister, onLoginSuccess }) {
 
           </div>
 
-
-          {/* SECURITY MESSAGE */}
-
           <p className="auth-security">
             <span>SECURE</span>
-            Your account information is securely protected.
+            Your account information is securely
+            protected.
           </p>
 
         </div>
-
       </div>
-
     </div>
   );
 }
