@@ -34,23 +34,37 @@ function Register({ onBack, onLogin }) {
     try {
       setLoading(true);
 
-      let response;
+      console.log("================================");
+      console.log("[REGISTER] API URL:", API_BASE_URL);
+      console.log(
+        "[REGISTER] Endpoint:",
+        `${API_BASE_URL}/auth/register`
+      );
+      console.log("[REGISTER] Name:", name.trim());
+      console.log("[REGISTER] Email:", email.trim());
+      console.log("[REGISTER] Sending registration request...");
+      console.log("================================");
 
-      try {
-        response = await fetch(`${API_BASE_URL}/auth/register`, {
+      const response = await fetch(
+        `${API_BASE_URL}/auth/register`,
+        {
           method: "POST",
           headers: {
+            Accept: "application/json",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
             name: name.trim(),
             email: email.trim(),
-            password: password,
+            password,
           }),
-        });
-      } catch (err) {
-        throw new Error(networkErrorMessage(err));
-      }
+        }
+      );
+
+      console.log(
+        "[REGISTER] Response status:",
+        response.status
+      );
 
       let data = null;
 
@@ -60,12 +74,23 @@ function Register({ onBack, onLogin }) {
         data = null;
       }
 
+      console.log(
+        "[REGISTER] Response data:",
+        data
+      );
+
       if (!response.ok) {
-        setError(
-          formatApiError(data?.detail, "Registration failed. Please try again.")
+        throw new Error(
+          formatApiError(
+            data?.detail,
+            `Registration failed with status ${response.status}.`
+          )
         );
-        return;
       }
+
+      console.log(
+        "[REGISTER] Registration successful."
+      );
 
       setSuccess(
         "Account created successfully! Redirecting to login..."
@@ -81,12 +106,34 @@ function Register({ onBack, onLogin }) {
       }, 1500);
 
     } catch (error) {
-      console.error("Registration error:", error);
-
-      setError(
-        error.message ||
-          "Cannot connect to the server. Make sure your FastAPI backend is running."
+      console.error(
+        "[REGISTER] Registration error:",
+        error
       );
+
+      const message =
+        error?.message || "";
+
+      if (
+        message.toLowerCase().includes(
+          "failed to fetch"
+        ) ||
+        message.toLowerCase().includes(
+          "networkerror"
+        ) ||
+        message.toLowerCase().includes(
+          "network request failed"
+        )
+      ) {
+        setError(
+          "Cannot reach the API server. Please check your internet connection or try again."
+        );
+      } else {
+        setError(
+          message ||
+            networkErrorMessage(error)
+        );
+      }
 
     } finally {
       setLoading(false);
@@ -96,22 +143,10 @@ function Register({ onBack, onLogin }) {
   return (
     <div className="auth-page">
 
-      {/* =================================================
-          BACKGROUND
-          ================================================= */}
-
       <div className="auth-background">
-
         <div className="auth-orb auth-orb-one"></div>
-
         <div className="auth-orb auth-orb-two"></div>
-
       </div>
-
-
-      {/* =================================================
-          BACK TO HOME
-          ================================================= */}
 
       <button
         className="auth-back-button"
@@ -121,21 +156,9 @@ function Register({ onBack, onLogin }) {
         ← Back to Home
       </button>
 
-
-      {/* =================================================
-          AUTH CONTAINER
-          ================================================= */}
-
       <div className="auth-container">
 
-
-        {/* =================================================
-            LEFT INFORMATION PANEL
-            ================================================= */}
-
         <div className="auth-info">
-
-          {/* BRAND */}
 
           <div className="auth-brand">
 
@@ -144,7 +167,6 @@ function Register({ onBack, onLogin }) {
             </div>
 
             <div>
-
               <h2>
                 Resume<span>AI</span>
               </h2>
@@ -152,13 +174,9 @@ function Register({ onBack, onLogin }) {
               <p>
                 AI Career Assistant
               </p>
-
             </div>
 
           </div>
-
-
-          {/* INFORMATION */}
 
           <div className="auth-info-content">
 
@@ -167,13 +185,11 @@ function Register({ onBack, onLogin }) {
               AI-POWERED
             </div>
 
-
             <h1>
               Start Your
               <br />
               <span>Career Journey.</span>
             </h1>
-
 
             <p>
               Create your ResumeAI account and get
@@ -181,47 +197,27 @@ function Register({ onBack, onLogin }) {
               and career recommendations.
             </p>
 
-
-            {/* BENEFITS */}
-
             <div className="auth-benefits">
 
               <div className="auth-benefit">
-
-                <div>
-                  ✓
-                </div>
-
+                <div>✓</div>
                 <span>
                   Analyze Your Resume
                 </span>
-
               </div>
 
-
               <div className="auth-benefit">
-
-                <div>
-                  ✓
-                </div>
-
+                <div>✓</div>
                 <span>
                   Discover Matching Jobs
                 </span>
-
               </div>
 
-
               <div className="auth-benefit">
-
-                <div>
-                  ✓
-                </div>
-
+                <div>✓</div>
                 <span>
                   Get Personalized Career Insights
                 </span>
-
               </div>
 
             </div>
@@ -230,15 +226,7 @@ function Register({ onBack, onLogin }) {
 
         </div>
 
-
-        {/* =================================================
-            REGISTER CARD
-            ================================================= */}
-
         <div className="auth-card">
-
-
-          {/* CARD HEADER */}
 
           <div className="auth-card-header">
 
@@ -246,11 +234,9 @@ function Register({ onBack, onLogin }) {
               R
             </div>
 
-
             <h2>
               Create Your Account
             </h2>
-
 
             <p>
               Join ResumeAI and start improving your career.
@@ -258,52 +244,30 @@ function Register({ onBack, onLogin }) {
 
           </div>
 
-
-          {/* =================================================
-              ERROR MESSAGE
-              ================================================= */}
-
           {error && (
             <div className="auth-error">
 
-              <span>
-                !
-              </span>
+              <span>!</span>
 
               {error}
 
             </div>
           )}
 
-
-          {/* =================================================
-              SUCCESS MESSAGE
-              ================================================= */}
-
           {success && (
             <div className="auth-success">
 
-              <span>
-                ✓
-              </span>
+              <span>✓</span>
 
               {success}
 
             </div>
           )}
 
-
-          {/* =================================================
-              REGISTER FORM
-              ================================================= */}
-
           <form
             className="auth-form"
             onSubmit={handleRegister}
           >
-
-
-            {/* FULL NAME */}
 
             <div className="auth-field">
 
@@ -311,13 +275,11 @@ function Register({ onBack, onLogin }) {
                 Full Name
               </label>
 
-
               <div className="auth-input-wrapper">
 
                 <span className="auth-input-icon">
                   R
                 </span>
-
 
                 <input
                   id="name"
@@ -335,22 +297,17 @@ function Register({ onBack, onLogin }) {
 
             </div>
 
-
-            {/* EMAIL */}
-
             <div className="auth-field">
 
               <label htmlFor="register-email">
                 Email Address
               </label>
 
-
               <div className="auth-input-wrapper">
 
                 <span className="auth-input-icon">
                   @
                 </span>
-
 
                 <input
                   id="register-email"
@@ -368,22 +325,17 @@ function Register({ onBack, onLogin }) {
 
             </div>
 
-
-            {/* PASSWORD */}
-
             <div className="auth-field">
 
               <label htmlFor="register-password">
                 Password
               </label>
 
-
               <div className="auth-input-wrapper">
 
                 <span className="auth-input-icon">
                   •••
                 </span>
-
 
                 <input
                   id="register-password"
@@ -402,22 +354,17 @@ function Register({ onBack, onLogin }) {
 
             </div>
 
-
-            {/* CONFIRM PASSWORD */}
-
             <div className="auth-field">
 
               <label htmlFor="confirm-password">
                 Confirm Password
               </label>
 
-
               <div className="auth-input-wrapper">
 
                 <span className="auth-input-icon">
                   •••
                 </span>
-
 
                 <input
                   id="confirm-password"
@@ -436,9 +383,6 @@ function Register({ onBack, onLogin }) {
 
             </div>
 
-
-            {/* CREATE ACCOUNT BUTTON */}
-
             <button
               type="submit"
               className="auth-submit-button"
@@ -448,16 +392,12 @@ function Register({ onBack, onLogin }) {
               {loading ? (
                 <>
                   <span className="auth-spinner"></span>
-
                   Creating Account...
                 </>
               ) : (
                 <>
                   Create Account
-
-                  <span>
-                    →
-                  </span>
+                  <span>→</span>
                 </>
               )}
 
@@ -465,24 +405,15 @@ function Register({ onBack, onLogin }) {
 
           </form>
 
-
-          {/* =================================================
-              LOGIN LINK
-              ================================================= */}
-
           <div className="auth-divider">
-            <span>
-              OR
-            </span>
+            <span>OR</span>
           </div>
-
 
           <div className="auth-register-text">
 
             <span>
               Already have an account?
             </span>
-
 
             <button
               type="button"
@@ -492,9 +423,6 @@ function Register({ onBack, onLogin }) {
             </button>
 
           </div>
-
-
-          {/* SECURITY */}
 
           <p className="auth-security">
             <span>SECURE</span>
