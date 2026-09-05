@@ -1,5 +1,5 @@
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
+  import.meta.env.VITE_API_URL ||
   "http://127.0.0.1:8000";
 
 
@@ -87,9 +87,7 @@ export function networkErrorMessage(error) {
     error?.name === "TypeError"
   ) {
     return (
-      "Cannot reach the API server. Start the backend with " +
-      "`python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000` " +
-      "from the backend folder, then try again."
+      "Cannot reach the API server. Please check your internet connection or try again."
     );
   }
 
@@ -150,7 +148,7 @@ export async function apiRequest(
   // -------------------------------------------------------
 
   console.log(
-    `[API] ${options.method || "GET"} ${endpoint}`
+    `[API] ${options.method || "GET"} ${API_BASE_URL}${endpoint}`
   );
 
   console.log(
