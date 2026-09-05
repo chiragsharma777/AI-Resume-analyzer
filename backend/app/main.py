@@ -1,3 +1,4 @@
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -12,12 +13,20 @@ from app.routers import analysis
 from app.routers import jobs
 
 
+# =========================================================
+# DATABASE STARTUP
+# =========================================================
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     # Ensure all tables exist before serving requests.
     Base.metadata.create_all(bind=engine)
     yield
 
+
+# =========================================================
+# FASTAPI APP
+# =========================================================
 
 app = FastAPI(
     title="AI Resume Analyzer API",
@@ -33,22 +42,8 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        # Local development
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:4173",
-        "http://127.0.0.1:4173",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-
-        # Production
-        # Add your Vercel frontend URL here later.
-        # Example:
-        # "https://your-project.vercel.app",
-    ],
-    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1):\d+",
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
