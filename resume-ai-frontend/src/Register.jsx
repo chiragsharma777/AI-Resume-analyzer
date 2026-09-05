@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   API_BASE_URL,
   formatApiError,
-  networkErrorMessage,
 } from "./api";
 
 function Register({ onBack, onLogin }) {
@@ -21,8 +20,16 @@ function Register({ onBack, onLogin }) {
     setError("");
     setSuccess("");
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanName) {
+      setError("Please enter your full name.");
+      return;
+    }
+
+    if (!cleanEmail) {
+      setError("Please enter your email address.");
       return;
     }
 
@@ -31,66 +38,63 @@ function Register({ onBack, onLogin }) {
       return;
     }
 
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     try {
       setLoading(true);
 
+      const url = `${API_BASE_URL}/auth/register`;
+
       console.log("================================");
+      console.log("[REGISTER] Starting registration");
       console.log("[REGISTER] API URL:", API_BASE_URL);
-      console.log(
-        "[REGISTER] Endpoint:",
-        `${API_BASE_URL}/auth/register`
-      );
-      console.log("[REGISTER] Name:", name.trim());
-      console.log("[REGISTER] Email:", email.trim());
-      console.log("[REGISTER] Sending registration request...");
+      console.log("[REGISTER] Endpoint:", url);
+      console.log("[REGISTER] Name:", cleanName);
+      console.log("[REGISTER] Email:", cleanEmail);
       console.log("================================");
 
-      const response = await fetch(
-        `${API_BASE_URL}/auth/register`,
-        {
-          method: "POST",
-          headers: {
-            Accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name: name.trim(),
-            email: email.trim(),
-            password,
-          }),
-        }
-      );
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          name: cleanName,
+          email: cleanEmail,
+          password: password,
+        }),
+      });
 
-      console.log(
-        "[REGISTER] Response status:",
-        response.status
-      );
+      console.log("[REGISTER] HTTP status:", response.status);
 
-      let data = null;
+      const contentType =
+        response.headers.get("content-type") || "";
 
-      try {
+      let data;
+
+      if (contentType.includes("application/json")) {
         data = await response.json();
-      } catch {
-        data = null;
+      } else {
+        const text = await response.text();
+        data = text ? { detail: text } : null;
       }
 
-      console.log(
-        "[REGISTER] Response data:",
-        data
-      );
+      console.log("[REGISTER] Response:", data);
 
       if (!response.ok) {
         throw new Error(
           formatApiError(
-            data?.detail,
+            data?.detail || data?.message,
             `Registration failed with status ${response.status}.`
           )
         );
       }
 
-      console.log(
-        "[REGISTER] Registration successful."
-      );
+      console.log("[REGISTER] Registration successful");
 
       setSuccess(
         "Account created successfully! Redirecting to login..."
@@ -104,37 +108,24 @@ function Register({ onBack, onLogin }) {
       setTimeout(() => {
         onLogin();
       }, 1500);
+    } catch (err) {
+      console.error("[REGISTER] Error:", err);
 
-    } catch (error) {
-      console.error(
-        "[REGISTER] Registration error:",
-        error
-      );
-
-      const message =
-        error?.message || "";
+      const message = String(err?.message || "");
 
       if (
-        message.toLowerCase().includes(
-          "failed to fetch"
-        ) ||
-        message.toLowerCase().includes(
-          "networkerror"
-        ) ||
-        message.toLowerCase().includes(
-          "network request failed"
-        )
+        message.toLowerCase().includes("failed to fetch") ||
+        message.toLowerCase().includes("networkerror") ||
+        message.toLowerCase().includes("network request failed")
       ) {
         setError(
           "Cannot reach the API server. Please check your internet connection or try again."
         );
       } else {
         setError(
-          message ||
-            networkErrorMessage(error)
+          message || "Unable to create your account. Please try again."
         );
       }
-
     } finally {
       setLoading(false);
     }
@@ -161,7 +152,6 @@ function Register({ onBack, onLogin }) {
         <div className="auth-info">
 
           <div className="auth-brand">
-
             <div className="auth-brand-icon">
               R
             </div>
@@ -171,11 +161,8 @@ function Register({ onBack, onLogin }) {
                 Resume<span>AI</span>
               </h2>
 
-              <p>
-                AI Career Assistant
-              </p>
+              <p>AI Career Assistant</p>
             </div>
-
           </div>
 
           <div className="auth-info-content">
@@ -201,16 +188,12 @@ function Register({ onBack, onLogin }) {
 
               <div className="auth-benefit">
                 <div>✓</div>
-                <span>
-                  Analyze Your Resume
-                </span>
+                <span>Analyze Your Resume</span>
               </div>
 
               <div className="auth-benefit">
                 <div>✓</div>
-                <span>
-                  Discover Matching Jobs
-                </span>
+                <span>Discover Matching Jobs</span>
               </div>
 
               <div className="auth-benefit">
@@ -223,7 +206,6 @@ function Register({ onBack, onLogin }) {
             </div>
 
           </div>
-
         </div>
 
         <div className="auth-card">
@@ -234,9 +216,7 @@ function Register({ onBack, onLogin }) {
               R
             </div>
 
-            <h2>
-              Create Your Account
-            </h2>
+            <h2>Create Your Account</h2>
 
             <p>
               Join ResumeAI and start improving your career.
@@ -246,21 +226,15 @@ function Register({ onBack, onLogin }) {
 
           {error && (
             <div className="auth-error">
-
               <span>!</span>
-
               {error}
-
             </div>
           )}
 
           {success && (
             <div className="auth-success">
-
               <span>✓</span>
-
               {success}
-
             </div>
           )}
 
@@ -294,7 +268,6 @@ function Register({ onBack, onLogin }) {
                 />
 
               </div>
-
             </div>
 
             <div className="auth-field">
@@ -322,7 +295,6 @@ function Register({ onBack, onLogin }) {
                 />
 
               </div>
-
             </div>
 
             <div className="auth-field">
@@ -351,7 +323,6 @@ function Register({ onBack, onLogin }) {
                 />
 
               </div>
-
             </div>
 
             <div className="auth-field">
@@ -380,7 +351,6 @@ function Register({ onBack, onLogin }) {
                 />
 
               </div>
-
             </div>
 
             <button
@@ -388,7 +358,6 @@ function Register({ onBack, onLogin }) {
               className="auth-submit-button"
               disabled={loading}
             >
-
               {loading ? (
                 <>
                   <span className="auth-spinner"></span>
@@ -400,7 +369,6 @@ function Register({ onBack, onLogin }) {
                   <span>→</span>
                 </>
               )}
-
             </button>
 
           </form>
