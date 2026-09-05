@@ -1,4 +1,3 @@
-
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -39,17 +38,26 @@ app = FastAPI(
 # =========================================================
 # CORS CONFIGURATION
 # =========================================================
+
 app.add_middleware(
     CORSMiddleware,
+
+    # Allow your Vercel frontend and local development.
     allow_origins=[
-        "https://YOUR-VERCEL-DOMAIN.vercel.app",
+        "https://ai-resume-analyzer.vercel.app",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
     ],
+
     allow_credentials=False,
+
+    # Allow GET, POST, PUT, DELETE, OPTIONS, etc.
     allow_methods=["*"],
+
+    # Allow Content-Type, Authorization, Accept, etc.
     allow_headers=["*"],
 )
+
 
 # =========================================================
 # ROUTERS
@@ -79,4 +87,6 @@ def root():
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+    }
